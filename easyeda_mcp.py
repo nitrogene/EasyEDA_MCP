@@ -2,6 +2,19 @@ import asyncio
 import json
 import socket
 import sys
+
+# Ensure UTF-8 output for Windows console/stderr
+if hasattr(sys.stderr, 'reconfigure'):
+    try:
+        sys.stderr.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
 import uuid
 import websockets
 from mcp.server import Server
