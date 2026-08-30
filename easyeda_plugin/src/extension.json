@@ -1,50 +1,50 @@
 {
-  "uuid": "a1b2c3d4e5f64a1b8c9d0e1f2a3b4c5d",
-  "name": "atm-mcp",
-  "displayName": "ATM_MCP",
-  "version": "1.0.1",
-  "description": "EasyEDA Pro AI MCP Bridge",
-  "publisher": "Atmel",
-  "entry": "main.js",
-  "engines": {
-    "eda": "*"
-  },
-  "headerMenus": {
-    "sch": [
-      {
-        "id": "ATM_MCP_Menu_SCH",
-        "title": "ATM_MCP",
-        "menuItems": [
-          {
-            "id": "Connect_SCH",
-            "title": "Connecter au serveur MCP",
-            "registerFn": "connectManual"
-          },
-          {
-            "id": "About_SCH",
-            "title": "À propos...",
-            "registerFn": "about"
-          }
+    "uuid": "a1b2c3d4e5f64a1b8c9d0e1f2a3b4c5d",
+    "name": "atm-mcp",
+    "displayName": "ATM_MCP",
+    "version": "1.0.1",
+    "description": "EasyEDA Pro AI MCP Bridge",
+    "publisher": "Atmel",
+    "entry": "main.js",
+    "engines": {
+        "eda": "*"
+    },
+    "headerMenus": {
+        "sch": [
+            {
+                "id": "ATM_MCP_Menu_SCH",
+                "title": "ATM_MCP",
+                "menuItems": [
+                    {
+                        "id": "Connect_SCH",
+                        "title": "Connecter au serveur MCP",
+                        "registerFn": "connectManual"
+                    },
+                    {
+                        "id": "About_SCH",
+                        "title": "À propos...",
+                        "registerFn": "about"
+                    }
+                ]
+            }
+        ],
+        "pcb": [
+            {
+                "id": "ATM_MCP_Menu_PCB",
+                "title": "ATM_MCP",
+                "menuItems": [
+                    {
+                        "id": "Connect_PCB",
+                        "title": "Connecter au serveur MCP",
+                        "registerFn": "connectManual"
+                    },
+                    {
+                        "id": "About_PCB",
+                        "title": "À propos...",
+                        "registerFn": "about"
+                    }
+                ]
+            }
         ]
-      }
-    ],
-    "pcb": [
-      {
-        "id": "ATM_MCP_Menu_PCB",
-        "title": "ATM_MCP",
-        "menuItems": [
-          {
-            "id": "Connect_PCB",
-            "title": "Connecter au serveur MCP",
-            "registerFn": "connectManual"
-          },
-          {
-            "id": "About_PCB",
-            "title": "À propos...",
-            "registerFn": "about"
-          }
-        ]
-      }
-    ]
-  }
+    }
 }
