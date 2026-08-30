@@ -11,13 +11,11 @@ venv/
 .vscode/
 *.log
 
-# Ignore raw plugin files, only keep the zip
+# Plugin files
 easyeda_plugin/*
-!easyeda_plugin/easyeda_plugin.eext
-
-# Ignore temporary dev scripts
-merge_apis.py
-info.txt
-*.7z
-*.mp4
-full_api_dump.json
+!easyeda_plugin/mcp_plugin.eext
+!easyeda_plugin/src/
+easyeda_plugin/src/*
+!easyeda_plugin/src/api_commands.json
+!easyeda_plugin/src/extension.json
+!easyeda_plugin/src/main.js
