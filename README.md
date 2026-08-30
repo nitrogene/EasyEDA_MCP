@@ -24,15 +24,44 @@ The plugin provides full "God-mode" access to the entire internal API of EasyEDA
 
 ### 🛠️ Installation (Antigravity / Claude Desktop ↔ EasyEDA Pro)
 
-- Load the `easyeda_plugin.eext` (or `.zip`) file via the Extension Manager in EasyEDA Pro.
+- Load the `easyeda_plugin.eext` file via the Extension Manager in EasyEDA Pro.
 - Add the MCP server configuration to your AI client (e.g. Antigravity or Claude Desktop):
-
+  - Copilot (mcp <2.x)
 ```json
-"easyeda_pro": {
-  "command": "python",
-  "args": [
-    "C:/path/to/your/EasyEDA_MCP/easyeda_mcp.py"
-  ]
+{
+  "mcpServers": {
+    "easyeda_pro": {
+      "type": "local",
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp<2",
+        "--with",
+        "websockets",
+        "D:/Dev/EasyEDA_MCP/mcp_server/easyeda.py"
+      ]
+    }
+  }
+}
+```  
+  - Antigravity (mcp >2.x)
+```json
+{
+  "mcpServers": {
+    "easyeda_pro": {
+      "type": "local",
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp>=2",
+        "--with",
+        "websockets",
+        "D:/Dev/EasyEDA_MCP/mcp_server/easyeda.py"
+      ]
+    }
+  }
 }
 ```
 

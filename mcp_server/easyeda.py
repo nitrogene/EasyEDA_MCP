@@ -17,7 +17,28 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 import uuid
 import websockets
-from mcp.server.mcpserver import MCPServer
+
+# Runtime detection for MCP SDK v1.x and v2.x.
+# mcp 2.x exposes `mcp.server.mcpserver.MCPServer`.
+# mcp < 2 exposes `mcp.server.fastmcp.FastMCP`.
+MCP_VERSION = None
+try:
+    from mcp.server.mcpserver import MCPServer
+    MCP_VERSION = 2
+except Exception:
+    try:
+        from mcp.server.fastmcp import FastMCP as MCPServer
+        MCP_VERSION = 1
+    except Exception:
+        try:
+            from fastmcp import FastMCP as MCPServer
+            MCP_VERSION = 1
+        except Exception as exc:  # pragma: no cover - import error surfaced at runtime
+            raise RuntimeError(
+                "Unsupported MCP SDK: neither mcp 2.x (MCPServer) nor mcp<2 (FastMCP) is available."
+            ) from exc
+
+print(f"[EasyEDA MCP] detected MCP SDK v{MCP_VERSION}.x", file=sys.stderr)
 
 WS_HOST = "127.0.0.1"
 WS_PORT = 8787
@@ -239,11 +260,27 @@ async def main():
         exc = task.exception()
         if exc:
             print(f"❌ WebSocket server crashed: {exc}", file=sys.stderr)
-            asyncio.get_event_loop().stop()
+            try:
+                asyncio.get_event_loop().stop()
+            except RuntimeError:
+                pass
 
     ws_task.add_done_callback(_on_ws_done)
 
-    await app.run_stdio_async()
+    try:
+        if hasattr(app, "run_stdio_async"):
+            await app.run_stdio_async()
+        elif hasattr(app, "run"):
+            await asyncio.to_thread(app.run, transport="stdio")
+        else:
+            raise RuntimeError("This MCP SDK does not expose a stdio runner")
+    finally:
+        if not ws_task.done():
+            ws_task.cancel()
+        try:
+            await ws_task
+        except asyncio.CancelledError:
+            pass
 
 if __name__ == "__main__":
     asyncio.run(main())
