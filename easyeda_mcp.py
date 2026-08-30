@@ -40,7 +40,7 @@ app = Server("EasyEDA_Local_MCP")
 
 async def ws_handler(websocket):
     global easyeda_ws
-    print("✅ EasyEDA подключилась к локальному MCP!", file=sys.stderr)
+    print("✅ EasyEDA connected to local MCP!", file=sys.stderr)
     easyeda_ws = websocket
     try:
         async for message in websocket:
@@ -75,7 +75,7 @@ async def ws_handler(websocket):
             if not fut.done():
                 fut.set_exception(Exception("EasyEDA disconnected"))
         pending_requests.clear()
-        print("❌ EasyEDA отключилась.", file=sys.stderr)
+        print("❌ EasyEDA disconnected.", file=sys.stderr)
 
 async def start_ws_server():
     async with websockets.serve(ws_handler, WS_HOST, WS_PORT):
@@ -84,7 +84,7 @@ async def start_ws_server():
 async def send_event(event_name: str, body: dict = {}, timeout: float = 10.0):
     global easyeda_ws
     if not easyeda_ws:
-        raise Exception("EasyEDA не подключена")
+        raise Exception("EasyEDA is not connected")
 
     msg_id = str(uuid.uuid4())
     body["id"] = msg_id
@@ -107,7 +107,7 @@ async def send_event(event_name: str, body: dict = {}, timeout: float = 10.0):
         else:
             raise Exception(result.get("error", "Unknown error from EasyEDA"))
     except asyncio.TimeoutError:
-        raise Exception("Тайм-аут ожидания ответа от EasyEDA")
+        raise Exception("Timeout waiting for a response from EasyEDA")
     finally:
         pending_requests.pop(msg_id, None)
 
@@ -116,66 +116,66 @@ async def list_tools() -> list[Tool]:
     return [
         Tool(
             name="get_components",
-            description="Получить список ID всех компонентов на текущей схеме EasyEDA",
+            description="Get the list of IDs of all components on the current EasyEDA schematic",
             inputSchema={"type": "object", "properties": {}}
         ),
         Tool(
             name="get_current_project_info",
-            description="Получить информацию о текущем открытом проекте (имя, листы, платы)",
+            description="Get information about the currently open project (name, sheets, boards)",
             inputSchema={"type": "object", "properties": {}}
         ),
         Tool(
             name="open_document",
-            description="Открыть документ (схему/плату) по его UUID",
+            description="Open a document (schematic/board) by its UUID",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "uuid": {"type": "string", "description": "UUID документа"}
+                    "uuid": {"type": "string", "description": "Document UUID"}
                 },
                 "required": ["uuid"]
             }
         ),
         Tool(
             name="create_schematic",
-            description="Создать новую схему в текущем проекте",
+            description="Create a new schematic in the current project",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "boardName": {"type": "string", "description": "Имя для новой платы/схемы (опционально)"}
+                    "boardName": {"type": "string", "description": "Name for the new board/schematic (optional)"}
                 }
             }
         ),
         Tool(
             name="create_schematic_page",
-            description="Создать новую страницу в существующей схеме",
+            description="Create a new page in an existing schematic",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "schematicUuid": {"type": "string", "description": "UUID схемы"}
+                    "schematicUuid": {"type": "string", "description": "Schematic UUID"}
                 },
                 "required": ["schematicUuid"]
             }
         ),
         Tool(
             name="modify_schematic_name",
-            description="Изменить имя схемы",
+            description="Rename a schematic",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "schematicUuid": {"type": "string", "description": "UUID схемы"},
-                    "schematicName": {"type": "string", "description": "Новое имя"}
+                    "schematicUuid": {"type": "string", "description": "Schematic UUID"},
+                    "schematicName": {"type": "string", "description": "New name"}
                 },
                 "required": ["schematicUuid", "schematicName"]
             }
         ),
         Tool(
             name="modify_schematic_page_name",
-            description="Изменить имя страницы схемы",
+            description="Rename a schematic page",
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "schematicPageUuid": {"type": "string", "description": "UUID страницы"},
-                    "schematicPageName": {"type": "string", "description": "Новое имя страницы"}
+                    "schematicPageUuid": {"type": "string", "description": "Page UUID"},
+                    "schematicPageName": {"type": "string", "description": "New page name"}
                 },
                 "required": ["schematicPageUuid", "schematicPageName"]
             }
@@ -233,11 +233,11 @@ TOOL_ARGS_MAP = {
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     if not easyeda_ws:
-        return [TextContent(type="text", text="Ошибка: EasyEDA не подключена. Открой программу и активируй плагин.")]
+        return [TextContent(type="text", text="Error: EasyEDA is not connected. Open the application and activate the plugin.")]
 
     event_name = TOOL_TO_EVENT.get(name)
     if not event_name:
-        return [TextContent(type="text", text=f"Неизвестный инструмент: {name}")]
+        return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
     if name in TOOL_ARGS_MAP:
         body = TOOL_ARGS_MAP[name](arguments)
@@ -248,13 +248,13 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         result = await send_event(event_name, body)
         return [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, default=str))]
     except Exception as e:
-        return [TextContent(type="text", text=f"Ошибка: {str(e)}")]
+        return [TextContent(type="text", text=f"Error: {str(e)}")]
 
 async def main():
     if is_port_in_use(WS_HOST, WS_PORT):
         print(
-            f"❌ Порт {WS_PORT} уже занят! Другой экземпляр EasyEDA MCP уже запущен. "
-            f"Завершаю работу.",
+            f"❌ Port {WS_PORT} is already in use! Another instance of EasyEDA MCP "
+            f"is already running. Shutting down.",
             file=sys.stderr
         )
         sys.exit(1)
@@ -266,7 +266,7 @@ async def main():
             return
         exc = task.exception()
         if exc:
-            print(f"❌ WebSocket сервер упал: {exc}", file=sys.stderr)
+            print(f"❌ WebSocket server crashed: {exc}", file=sys.stderr)
             asyncio.get_event_loop().stop()
 
     ws_task.add_done_callback(_on_ws_done)
