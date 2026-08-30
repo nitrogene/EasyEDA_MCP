@@ -63,6 +63,75 @@ The plugin provides full "God-mode" access to the entire internal API of EasyEDA
 - `websockets` library
 - Chrome/Edge browser
 
+### 🏗️ Architecture — Python vs .eext
+
+This project is made of **two distinct pieces**, in two different languages, running in two separate environments. They only talk to each other over a local WebSocket.
+
+```
+AI (Claude Code / Copilot CLI / Antigravity)
+        │  stdio (MCP protocol)
+        ▼
+easyeda_mcp.py  ────────────────  Python, runs on the PC
+        │  WebSocket ws://127.0.0.1:8787
+        ▼
+.eext extension ────────────────  JavaScript, runs inside the
+        │  direct call                    browser tab (EasyEDA Pro)
+        ▼
+EasyEDA internal API (eda.pcb_..., eda.sch_...)
+```
+
+#### `easyeda_mcp.py` — the MCP server
+
+| | |
+|---|---|
+| **Language** | Python |
+| **Where it runs** | On the PC, as a subprocess launched by the AI client |
+| **Role** | Translates MCP tool calls (from the AI) into WebSocket messages, and back |
+| **Loading** | Automatic, every session — via the AI client's `mcp_config.json` |
+
+It knows nothing about EasyEDA itself: it's a pipe connecting two protocols — stdio to the AI, WebSocket to the browser.
+
+**To edit it:** open `easyeda_mcp.py` in any editor, change the code, save, then **restart the AI client** (Copilot CLI, Antigravity, Claude Code) so it relaunches the process. Nothing needs to be reloaded on the EasyEDA side.
+
+**Dependency to watch:** the script relies on the `mcp` SDK. A too-recent version (`mcp>=2`) breaks the API the script uses — see Troubleshooting below if you hit `AttributeError: 'Server' object has no attribute 'list_tools'`. Fix with `pip install "mcp<2"`.
+
+#### The `.eext` — the EasyEDA Pro extension
+
+| | |
+|---|---|
+| **Language** | JavaScript |
+| **Where it runs** | Inside the browser tab, injected by EasyEDA Pro |
+| **Role** | Actually executes commands against EasyEDA's internal API (placement, routing, reading schematic data...) |
+| **Loading** | Manual, once — via **Settings → Extensions → Extension Manager → Import Extension** |
+
+This is the only piece with real access to the software's internal API, because that API only exists inside the JavaScript context of the editor's web page. A `.eext` is **a renamed ZIP archive** containing `extension.json` (the manifest), one or more `.js` files (the WebSocket connection and command execution logic), and image assets.
+
+**To edit it:**
+
+```bash
+cp easyeda_plugin.eext easyeda_plugin.zip
+unzip easyeda_plugin.zip -d easyeda_plugin_extracted
+# edit the .js file declared as entry point in extension.json
+cd easyeda_plugin_extracted
+zip -r ../easyeda_plugin_modified.zip .
+cd ..
+mv easyeda_plugin_modified.zip easyeda_plugin_modified.eext
+```
+
+⚠️ Zip the **contents** of the folder, not the folder itself — `extension.json` must sit at the archive root. Then reload it via **Settings → Extensions → Extension Manager → Import Extension**, and make sure **"Allow External Interaction"** stays enabled.
+
+#### Quick reference
+
+| Question | Answer |
+|---|---|
+| Add a new MCP tool (e.g. `route_track`) | Edit `easyeda_mcp.py` |
+| Change an error message or a log line | Edit `easyeda_mcp.py` |
+| Change the WebSocket port or protocol | Edit both (Python **and** JS must agree) |
+| Add a new internal EasyEDA API command | Edit the `.eext` |
+| Change reconnection/timeout handling on the browser side | Edit the `.eext` |
+| Changed the `.py` | Just restart the AI client |
+| Changed the `.eext` | Re-import the extension in EasyEDA Pro |
+
 ### ⚠️ Notes
 
 - Ensure EasyEDA Pro is open and the active tab before running complex PCB placement macros.
